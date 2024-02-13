@@ -17,7 +17,8 @@ public class TableDataBuilder : ITableDataBuilder
                 var column = csvData.Columns[columnIndex];
                 string valueAsString = row[columnIndex];
                 var columnData = ConvertValueToTargetType(valueAsString);
-                if (columnData is null) continue;
+                // if (columnData is null) continue;
+                // newRowData[column] = columnData;
                 newRowData[column] = columnData;
             }
             resultRows.Add(new Row(newRowData));

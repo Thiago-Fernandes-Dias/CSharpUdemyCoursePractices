@@ -11,8 +11,9 @@ public class Row
 
     public object GetAtColumn(string columnName)
     {
-        if (_data.TryGetValue(columnName, out var value))
-            return value;
-        return null;
+        // if (_data.TryGetValue(columnName, out var value))
+        //     return value;
+        // return null;
+        return _data[columnName];
     }
 }

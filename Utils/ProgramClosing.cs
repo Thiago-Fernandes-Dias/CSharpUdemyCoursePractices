@@ -1,4 +1,6 @@
-﻿namespace Utils;
+﻿using AssemblyTest;
+
+namespace Utils;
 
 public static class ProgramClosing
 {

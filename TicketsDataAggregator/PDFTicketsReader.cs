@@ -1,62 +1,42 @@
 ﻿using System.Globalization;
-using System.Text;
+using System.Transactions;
 using UglyToad.PdfPig;
 
 namespace TicketsDataAggregator;
 
 internal class PDFTicketsReader(string filePath) : ITicketsReader
 {
+    private static readonly Dictionary<string, CultureInfo> _cultureStrToCultureInfo = new()
+    {
+        ["jp"] = new CultureInfo("ja"),
+        ["fr"] = new CultureInfo("fr-FR"),
+        ["com"] = new CultureInfo("en-US")
+    };
+
     public IReadOnlyCollection<Ticket> ReadTickets()
     {
         ValidateFilePath(filePath);
-        List<string> titles = [];
-        List<string> dates = [];
-        List<string> times = [];
-        var culture = "";
         using var document = PdfDocument.Open(filePath);
         var page = document.GetPage(1);
-        var words = page.GetWords().ToList();
-        for (int i = 0; i < words.Count; i++)
-        {
-            if (words[i].Text == "Title:")
-            {
-                StringBuilder titleBuilder = new();
-                for (int j = i + 1; words[j].Text != "Date:"; j++, i++)
-                    titleBuilder.Append($"{words[j].Text} ");
-                titles.Add(titleBuilder.ToString().TrimEnd());
-            }
-            else if (words[i].Text == "Date:")
-            {
-                StringBuilder dateBuilder = new();
-                for (int j = i + 1; words[j].Text != "Time:"; j++, i++)
-                    dateBuilder.Append($"{words[j].Text} ");
-                dates.Add(dateBuilder.ToString().TrimEnd());
-            }
-            else if (words[i].Text == "Time:")
-            {
-                StringBuilder timeBuilder = new();
-                List<string> endWords = ["Title:", "Visit"];
-                for (int j = i + 1; !endWords.Contains(words[j].Text); j++, i++)
-                    timeBuilder.Append($"{words[j].Text} ");
-                times.Add(timeBuilder.ToString().TrimEnd());
-            }
-            else if (words[i].Text == "us:")
-            {
-                culture = ParseCulture(words[i + 1].Text.Split('.').Last());
-            }
-        }
-        if (!SameSize([times, titles, dates]))
-            throw new ArgumentException("Some tickets are invalid");
+        var pageText = page.Text;
+        var pageTextSplitted = pageText.Split(new string[] { "Title:", "Date:", "Time:", "Visit us:" }, StringSplitOptions.None);
+        var cultureInfo = _cultureStrToCultureInfo[ExtractCulture(pageTextSplitted.Last())];
         List<Ticket> tickets = [];
-        for (int i = 0; i < times.Count; i++)
+        for (int i = 1; i < pageTextSplitted.Length - 3; i += 3)
         {
-            var dateTime = DateTime.Parse($"{dates[i]} {times[i]}", new CultureInfo(culture));
-            Ticket ticket = new(titles[i],
-                                dateTime.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
-                                dateTime.ToString("HH:mm", CultureInfo.InvariantCulture));
+            var date = DateOnly.Parse(pageTextSplitted[i + 1], cultureInfo);
+            var time = TimeOnly.Parse(pageTextSplitted[i + 2], cultureInfo);
+            Ticket ticket = new(pageTextSplitted[i],
+                                date.ToString(CultureInfo.InvariantCulture),
+                                time.ToString(CultureInfo.InvariantCulture));
             tickets.Add(ticket);
         }
         return tickets;
+    }
+
+    private string ExtractCulture(string websiteUrl)
+    {
+        return websiteUrl.Split(".").Last();
     }
 
     private static void ValidateFilePath(string filePath)
@@ -65,17 +45,4 @@ internal class PDFTicketsReader(string filePath) : ITicketsReader
             return;
         throw new ArgumentException("The file is not a PDF.");
     }
-
-    private static bool SameSize(IEnumerable<IEnumerable<string>> lists)
-    {
-        var size = lists.First().Count();
-        return lists.All(list => list.Count() == size);
-    }
-
-    private static string ParseCulture(string culture) => culture switch
-    {
-        "jp" => "ja",
-        "fr" => "fr-FR",
-        _ => "en-US"
-    };
 }

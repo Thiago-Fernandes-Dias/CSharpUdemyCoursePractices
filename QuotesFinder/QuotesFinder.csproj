@@ -8,21 +8,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Utils\Utils.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="AppMessages.Designer.cs">
+    <Compile Update="Questions.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>AppMessages.resx</DependentUpon>
+      <DependentUpon>Questions.resx</DependentUpon>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="AppMessages.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>AppMessages.Designer.cs</LastGenOutput>
+    <EmbeddedResource Update="Questions.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Questions.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
 

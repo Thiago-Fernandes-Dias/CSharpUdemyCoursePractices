@@ -1,40 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Utils;
 
 namespace DiceRollApp;
 
-internal class GuessingManager
+public class GuessingManager
 {
-    private int _attempts;
-    private readonly DiceRoller _diceRoller;
     private const int _defaultAttempts = 3;
 
-    public GuessingManager(int attempts, DiceRoller diceRoller)
+    private readonly IDiceRoller _diceRoller;
+    private readonly IUserInterface _userInterface;
+    private readonly int _attempts;
+
+    public GuessingManager(int attempts, IDiceRoller diceRoller, IUserInterface userInterface)
     {
+        _diceRoller = diceRoller;
+        _userInterface = userInterface;
         if (attempts <= 0)
         {
-            Console.WriteLine($"Invalid quantity of attempts. Setting to {_defaultAttempts}");
+            _userInterface.ShowMessage(string.Format(AppMessages.InvalidQtyOfAttemps, _defaultAttempts));
             _attempts = _defaultAttempts;
         }
         else
         {
             _attempts = attempts;
         }
-        _diceRoller = diceRoller;
     }
 
-    public GuessingResult verifyUserChoice(int number)
+    public async Task Run()
     {
-        if (!_diceRoller.DiceRolled)
-            _diceRoller.RollDice();
-        if (_attempts == 0)
-            return GuessingResult.NoMoreAttempts;
-        _attempts--;
-        return number == _diceRoller.RollResult ? GuessingResult.RightChoice : GuessingResult.WrongChoice;
+        _diceRoller.RollDice();
+        _userInterface.ShowMessage(string.Format(AppMessages.DiceRolled, _attempts));
+        for (int i = 0; i < _attempts; i++)
+        {
+            var userChoice = _userInterface.ReadInteger(AppMessages.GuessTheNumber);
+            if (userChoice == _diceRoller.RollResult)
+            {
+                _userInterface.ShowMessage(AppMessages.Win);
+                return;
+            }
+            _userInterface.ShowMessage(AppMessages.WrongChoice);
+        }
+        _userInterface.ShowMessage(AppMessages.Lose);
     }
-
-    public bool HasAttempts => _attempts > 0;
 }

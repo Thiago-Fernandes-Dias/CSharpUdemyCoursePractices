@@ -17,7 +17,7 @@ internal class Program
             ITicketsReader ticketsReader = new PDFTicketsReader(filePath);
             tickets.AddRange(ticketsReader.ReadTickets());
         }
-        ITicketsRepository repo = new TicketsFileRepository($@"{directoryPath}\aggregatedTickets.txt");
+        ITicketsRepository repo = new TicketsFileRepository(Path.Combine(directoryPath, "aggregatedTickets.txt"));
         repo.SaveMany(tickets);
         return;
     }
